@@ -11,7 +11,6 @@ import (
 	"m7s.live/engine/v4/codec"
 	"m7s.live/engine/v4/config"
 	"m7s.live/engine/v4/track"
-	"m7s.live/engine/v4/util"
 )
 
 type Fmp4Config struct {
@@ -100,12 +99,12 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 			sub.ftyp = mp4.NewFtyp("isom", 0x200, []string{
 				"isom", "iso2", "avc1", "mp41",
 			})
-			newTrak.SetAVCDescriptor("avc1", v.DecoderConfiguration.Raw[0:1], v.DecoderConfiguration.Raw[1:2], true)
+			newTrak.SetAVCDescriptor("avc1", v.ParamaterSets[0:1], v.ParamaterSets[1:2], true)
 		case codec.CodecID_H265:
 			sub.ftyp = mp4.NewFtyp("isom", 0x200, []string{
 				"isom", "iso2", "hvc1", "mp41",
 			})
-			newTrak.SetHEVCDescriptor("hvc1", v.DecoderConfiguration.Raw[0:1], v.DecoderConfiguration.Raw[1:2], v.DecoderConfiguration.Raw[2:3], true)
+			newTrak.SetHEVCDescriptor("hvc1", v.ParamaterSets[0:1], v.ParamaterSets[1:2], v.ParamaterSets[2:3], true)
 		}
 		sub.AddTrack(v)
 	case *track.Audio:
@@ -118,12 +117,12 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 		sub.audio.TrackId = trackID
 		switch v.CodecID {
 		case codec.CodecID_AAC:
-			switch v.Profile {
-			case 0:
-				newTrak.SetAACDescriptor(aac.HEAACv1, int(v.SampleRate))
+			switch v.AudioObjectType {
 			case 1:
-				newTrak.SetAACDescriptor(aac.AAClc, int(v.SampleRate))
+				newTrak.SetAACDescriptor(aac.HEAACv1, int(v.SampleRate))
 			case 2:
+				newTrak.SetAACDescriptor(aac.AAClc, int(v.SampleRate))
+			case 3:
 				newTrak.SetAACDescriptor(aac.HEAACv2, int(v.SampleRate))
 			}
 		case codec.CodecID_PCMA:
@@ -140,15 +139,15 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 			stsd.AddChild(pcmu)
 		}
 		sub.AddTrack(v)
-	case *AudioFrame:
-		sub.audio.Push(sub, v.AbsTime-sub.SkipTS, v.DeltaTime, util.ConcatBuffers(v.Raw), mp4.SyncSampleFlags)
-	case *VideoFrame:
+	case AudioFrame:
+		sub.audio.Push(sub, v.AbsTime, v.DeltaTime, v.AUList.ToBytes(), mp4.SyncSampleFlags)
+	case VideoFrame:
 		flags := mp4.NonSyncSampleFlags
 		if v.IFrame {
 			flags = mp4.SyncSampleFlags
 		}
-		if data := util.ConcatBuffers(v.AVCC); len(data) > 5 {
-			sub.video.Push(sub, v.AbsTime-sub.SkipTS, v.DeltaTime, data[5:], flags)
+		if data := v.AVCC.ToBytes(); len(data) > 5 {
+			sub.video.Push(sub, v.AbsTime, v.DeltaTime, data[5:], flags)
 		}
 	default:
 		sub.Subscriber.OnEvent(event)
@@ -167,7 +166,7 @@ func (*Fmp4Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		InitSegment: mp4.CreateEmptyInit(),
 	}
 	sub.Moov.Mvhd.NextTrackID = 1
-	
+
 	sub.ID = r.RemoteAddr
 	sub.SetStuff(r.Context(), w)
 	if err := Fmp4Plugin.SubscribeBlock(streamPath, sub, SUBTYPE_RAW); err != nil {
