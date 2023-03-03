@@ -168,7 +168,8 @@ func (*Fmp4Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sub.Moov.Mvhd.NextTrackID = 1
 
 	sub.ID = r.RemoteAddr
-	sub.SetStuff(r.Context(), w)
+	sub.SetIO(w)
+	sub.SetParentCtx(r.Context())
 	if err := Fmp4Plugin.SubscribeBlock(streamPath, sub, SUBTYPE_RAW); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
