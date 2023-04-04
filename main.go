@@ -155,8 +155,7 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 }
 
 func (*Fmp4Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	streamPath := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/fmp4"), ".mp4")
-	streamPath = strings.TrimPrefix(streamPath, "/")
+	streamPath := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), ".mp4")
 	if r.URL.RawQuery != "" {
 		streamPath += "?" + r.URL.RawQuery
 	}
