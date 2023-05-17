@@ -69,7 +69,7 @@ var Fmp4Plugin = InstallPlugin(new(Fmp4Config))
 
 type Fmp4Subscriber struct {
 	Subscriber
-	*mp4.InitSegment `json:"-"`
+	*mp4.InitSegment `json:"-" yaml:"-"`
 	ftyp             *mp4.FtypBox
 	video            TrackContext
 	audio            TrackContext
