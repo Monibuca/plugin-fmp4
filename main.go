@@ -59,9 +59,6 @@ func (m *TrackContext) Push(ctx MediaContext, dt uint32, dur uint32, data []byte
 func (c *Fmp4Config) OnEvent(event any) {
 	switch event.(type) {
 	case FirstConfig:
-
-	case *Stream: //按需拉流
-
 	}
 }
 
@@ -69,11 +66,11 @@ var Fmp4Plugin = InstallPlugin(new(Fmp4Config))
 
 type Fmp4Subscriber struct {
 	Subscriber
-	*mp4.InitSegment `json:"-" yaml:"-"`
-	ftyp             *mp4.FtypBox
-	video            TrackContext
-	audio            TrackContext
-	seqNumber        uint32
+	initSegment *mp4.InitSegment `json:"-" yaml:"-"`
+	ftyp        *mp4.FtypBox
+	video       TrackContext
+	audio       TrackContext
+	seqNumber   uint32
 }
 
 func (sub *Fmp4Subscriber) GetSeqNumber() uint32 {
@@ -85,9 +82,9 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 	switch v := event.(type) {
 	case ISubscriber:
 		sub.ftyp.Encode(sub)
-		sub.Moov.Encode(sub)
+		sub.initSegment.Moov.Encode(sub)
 	case *track.Video:
-		moov := sub.Moov
+		moov := sub.initSegment.Moov
 		trackID := moov.Mvhd.NextTrackID
 		moov.Mvhd.NextTrackID++
 		newTrak := mp4.CreateEmptyTrak(trackID, 1000, "video", "chi")
@@ -108,7 +105,7 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 		}
 		sub.AddTrack(v)
 	case *track.Audio:
-		moov := sub.Moov
+		moov := sub.initSegment.Moov
 		trackID := moov.Mvhd.NextTrackID
 		moov.Mvhd.NextTrackID++
 		newTrak := mp4.CreateEmptyTrak(trackID, 1000, "audio", "chi")
@@ -162,9 +159,9 @@ func (*Fmp4Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Transfer-Encoding", "chunked")
 	w.Header().Set("Content-Type", "video/mp4")
 	sub := &Fmp4Subscriber{
-		InitSegment: mp4.CreateEmptyInit(),
+		initSegment: mp4.CreateEmptyInit(),
 	}
-	sub.Moov.Mvhd.NextTrackID = 1
+	sub.initSegment.Moov.Mvhd.NextTrackID = 1
 
 	sub.ID = r.RemoteAddr
 	sub.SetIO(w)
