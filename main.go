@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgeware/mp4ff/aac"
-	"github.com/edgeware/mp4ff/mp4"
+	"github.com/Eyevinn/mp4ff/aac"
+	"github.com/Eyevinn/mp4ff/mp4"
 	. "m7s.live/engine/v4"
 	"m7s.live/engine/v4/codec"
 	"m7s.live/engine/v4/config"
@@ -101,7 +101,7 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 			sub.ftyp = mp4.NewFtyp("isom", 0x200, []string{
 				"isom", "iso2", "hvc1", "mp41",
 			})
-			newTrak.SetHEVCDescriptor("hvc1", v.ParamaterSets[0:1], v.ParamaterSets[1:2], v.ParamaterSets[2:3], true)
+			newTrak.SetHEVCDescriptor("hvc1", v.ParamaterSets[0:1], v.ParamaterSets[1:2], v.ParamaterSets[2:3], nil, true)
 		}
 		sub.AddTrack(v)
 	case *track.Audio:
