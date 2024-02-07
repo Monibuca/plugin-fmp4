@@ -3,7 +3,7 @@ module m7s.live/plugin/fmp4/v4
 go 1.18
 
 require (
-	github.com/Eyevinn/mp4ff v0.38.0
+	github.com/Eyevinn/mp4ff v0.40.1
 	m7s.live/engine/v4 v4.13.12
 )
 

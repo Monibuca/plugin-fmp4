@@ -71,6 +71,7 @@ type Fmp4Subscriber struct {
 	video       TrackContext
 	audio       TrackContext
 	seqNumber   uint32
+	avccOffset  int // mp4 写入的 avcc 的偏移量即，从第几个字节开始写入，前面是头，仅供 rtmp 协议使用
 }
 
 func (sub *Fmp4Subscriber) GetSeqNumber() uint32 {
@@ -93,15 +94,22 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 		sub.video.TrackId = trackID
 		switch v.CodecID {
 		case codec.CodecID_H264:
+			sub.avccOffset = 5
 			sub.ftyp = mp4.NewFtyp("isom", 0x200, []string{
 				"isom", "iso2", "avc1", "mp41",
 			})
 			newTrak.SetAVCDescriptor("avc1", v.ParamaterSets[0:1], v.ParamaterSets[1:2], true)
 		case codec.CodecID_H265:
+			sub.avccOffset = 8
 			sub.ftyp = mp4.NewFtyp("isom", 0x200, []string{
 				"isom", "iso2", "hvc1", "mp41",
 			})
 			newTrak.SetHEVCDescriptor("hvc1", v.ParamaterSets[0:1], v.ParamaterSets[1:2], v.ParamaterSets[2:3], nil, true)
+		case codec.CodecID_AV1:
+			sub.avccOffset = 5
+			sub.ftyp = mp4.NewFtyp("isom", 0x200, []string{
+				"isom", "iso2", "av01", "mp41",
+			})
 		}
 		sub.AddTrack(v)
 	case *track.Audio:
@@ -143,8 +151,8 @@ func (sub *Fmp4Subscriber) OnEvent(event any) {
 		if v.IFrame {
 			flags = mp4.SyncSampleFlags
 		}
-		if data := v.AVCC.ToBytes(); len(data) > 5 {
-			sub.video.Push(sub, v.AbsTime, v.DeltaTime, data[5:], flags)
+		if data := v.AVCC.ToBytes(); len(data) > sub.avccOffset {
+			sub.video.Push(sub, v.AbsTime, v.DeltaTime, data[sub.avccOffset:], flags)
 		}
 	default:
 		sub.Subscriber.OnEvent(event)

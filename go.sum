@@ -1,6 +1,6 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/Eyevinn/mp4ff v0.38.0 h1:9DrGxg0qDTsjJuj7MoE0a8IWZP8AnwfRd98csXgrWhs=
-github.com/Eyevinn/mp4ff v0.38.0/go.mod h1:w/6GSa5ghZ1VavzJK6McQ2/flx8mKtcrKDr11SsEweA=
+github.com/Eyevinn/mp4ff v0.40.1 h1:7q/AtT2CFrZuYiR4PWB3nqsbG0nhyP9QAiX8iTId/+M=
+github.com/Eyevinn/mp4ff v0.40.1/go.mod h1:w/6GSa5ghZ1VavzJK6McQ2/flx8mKtcrKDr11SsEweA=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
 github.com/bluenviron/mediacommon v1.0.0 h1:hKelTQKfetasCmXaXMiL1ihID0GRmItyWZt1/pqiKKk=
 github.com/bluenviron/mediacommon v1.0.0/go.mod h1:nt5oKCO0WcZ+AH1oc12gs2ldp67xW2vl88c2StNmPlI=
